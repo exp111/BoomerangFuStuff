@@ -67,7 +67,7 @@ namespace HatLoader
                 //TODO: add hats
                 HatLoader.Log.LogMessage("Currently have these hats in hatLibrary:");
                 foreach (var h in __instance.hatLibrary)
-                    HatLoader.Log.LogMessage($"Type: {h.hatType} ({(int)h.hatType}), Prefab: {h.hatPrefab}, DebrisPrefab: {h.hatDebrisPrefab}");
+                    HatLoader.Log.LogMessage($"Type: {h.hatType} ({(int)h.hatType}), Prefab: {h.hatPrefab}, DebrisPrefab: {h.hatDebrisPrefab}, isTall: {h.isTall}, hideHair: {h.hideHair}, attachment: {h.hatAttachment}, bannedChars: {(string.Join(", ", h.bannedCharacters))}, dlc: {h.dlcID}");
 
                 HatLoader.Log.LogMessage("Adding our own now:");
                 var id = Enum.GetValues(typeof(HatType)).Cast<HatType>().Max() + 1;
@@ -77,7 +77,7 @@ namespace HatLoader
                     hatType = id,
                     hatPrefab = prefab,
                     hatDebrisPrefab = null,
-                    isTall = false,
+                    isTall = true, //TODO: what does this affect?
                     hideHair = true,
                     hatAttachment = Hat.HatAttachment.HatJoint,
                     bannedCharacters = new List<CharacterType>() { },

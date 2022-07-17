@@ -44,7 +44,8 @@ Move the parent into the assets to make it a prefab
 Export the prefab into a asset bundle or whatever
 
 #### Asset Bundles
-Either use ThunderKit (https://github.com/PassivePicasso/ThunderKit), which didnt work on unity 2019.2.21, or use this unity tutorial (https://docs.unity3d.com/Manual/AssetBundles-Workflow.html), which takes way longer but at least it works.
+Either use ThunderKit (https://github.com/PassivePicasso/ThunderKit), ~~which didnt work on unity 2019.2.21~~ fixed in 5.4.0, or use this unity tutorial (https://docs.unity3d.com/Manual/AssetBundles-Workflow.html), which takes way longer but at least it works.
+You should probably set some compression options if you use ThunderKit cause it makes a difference
 
 
 ## Ideas
