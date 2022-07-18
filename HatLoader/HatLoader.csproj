@@ -77,6 +77,10 @@
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>C:\Users\Exp\Downloads\Boomerang Fu\Boomerang Fu_Data\Managed\UnityEngine.CoreModule.dll</HintPath>
     </Reference>
+    <Reference Include="UnityEngine.JSONSerializeModule, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Users\Exp\Downloads\Boomerang Fu\Boomerang Fu_Data\Managed\UnityEngine.JSONSerializeModule.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="HatLoader.cs" />
@@ -87,4 +91,7 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>copy /y "$(TargetPath)" "C:\Users\Exp\Downloads\Boomerang Fu\BepInEx\plugins\exp111-HatLoader"</PostBuildEvent>
+  </PropertyGroup>
 </Project>
