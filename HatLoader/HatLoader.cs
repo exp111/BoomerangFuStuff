@@ -99,7 +99,7 @@ namespace HatLoader
                         continue;
 
                     // now parse that metadata file
-                    HatLoader.Log.LogMessage($"Found meta.json: {metaPath}");
+                    HatLoader.Log.LogMessage($"Found metadata: {metaPath}");
                     var hats = ParseMetadata(metaPath, cachedBundles);
                     HatLoader.Log.LogMessage($"Contains {hats.Count} Hats!");
 
@@ -108,7 +108,7 @@ namespace HatLoader
                     {
                         hatLibrary.Add(hat);
                         // FIXME: this doesnt require hatLibrary to be replaced, but may break shit on update?
-                        __instance.UnlockHatForCharacter(CharacterType.Banana, id, false); //TODO: comment
+                        //__instance.UnlockHatForCharacter(CharacterType.Banana, id, false); //TODO: comment, doesnt work anyway because the save is loaded after that
                     }
 
                     // now replace the original array with our "enhanced" list

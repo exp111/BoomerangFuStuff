@@ -34,23 +34,25 @@ Selection: `UILobbyPlayer.Update`:  => `GameManager.GetNextUnlockedHatForCharact
 => After GameManager init'ed, change the `hatLibrary` to include our hats (by copying merging the old array and the new items into a new one)
 
 ### Creating a costume
-Create a new scene
-Place a character from a prefab and hide the other layers (like death models and such)
-Place a empty object (the parent) on the head joint (for the banana the "tip_joint")
-Add your model or whatever you want on the head under the parent
-Remove any colliders
-Disable "Cast Shadows"
-Move the parent into the assets to make it a prefab
-Export the prefab into a asset bundle or whatever
+* Create a new scene
+* Place a character from a prefab and hide the other layers (like death models and such)
+* Place a empty object (the parent) on the head joint (for the banana the "tip_joint")
+* Add your model or whatever you want on the head under the parent
+* Remove any colliders
+* Disable "Cast Shadows"
+* Move the parent into the assets to make it a prefab
+* Export the prefab into a asset bundle or whatever
 
 #### Asset Bundles
-Either use ThunderKit (https://github.com/PassivePicasso/ThunderKit), ~~which didnt work on unity 2019.2.21~~ fixed in 5.4.0, or use this unity tutorial (https://docs.unity3d.com/Manual/AssetBundles-Workflow.html), which takes way longer but at least it works.
-You should probably set some compression options if you use ThunderKit cause it makes a difference
+Either use ThunderKit (https://github.com/PassivePicasso/ThunderKit), ~~which didnt work on unity 2019.2.21~~ fixed in 5.4.0, or use this unity tutorial (https://docs.unity3d.com/Manual/AssetBundles-Workflow.html), which takes way longer (because it compresses the bundle) but at least it works.
+
+You should probably set some compression options if you use ThunderKit cause it makes a difference.
 
 
 ## Ideas
-More levels
-More costumes
-More characters
-Level selection/blacklisting
-speed up option when all players are dead (like in shipped)
+* Intro skip
+* More levels
+* More costumes
+* More characters
+* Level selection/blacklisting
+* Speed up option when all players are dead (like in shipped)
