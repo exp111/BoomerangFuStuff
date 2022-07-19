@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Xml.Serialization;
 using UnityEngine;
 
@@ -17,6 +18,8 @@ namespace HatLoader
         public const string ID = "com.exp111.HatLoader";
         public const string NAME = "HatLoader";
         public const string VERSION = "1.0.0";
+
+        public const string CustomHatsSaveFile = "hatLoader.xml";
 
         public static ManualLogSource Log;
 
@@ -65,6 +68,7 @@ namespace HatLoader
         //TODO: do we need the dlc?
     }
 
+    // Injects our hats on game startup
     [HarmonyPatch(typeof(GameManager), nameof(GameManager.Start))]
     class GameManager_Start_Patch
     {
@@ -217,6 +221,200 @@ namespace HatLoader
                 hats.Add(hat);
             }
             return hats;
+        }
+    }
+
+    [Serializable]
+    public class CustomCharacterSaveData
+    {
+        public CustomCharacterSaveData() { }
+        public CustomCharacterSaveData(CharacterType type)
+        {
+            CharacterType = type;
+        }
+
+        public CharacterType CharacterType;
+        public List<int> Hats = new List<int>();
+    }
+
+    // Saves our unlocked custom hats into a file and prevents them from being saved in the main library
+    [HarmonyPatch(typeof(DataManager), nameof(DataManager.SaveUnlockedItemsToDisk))]
+    class DataManager_SaveUnlockedItemsToDisk_Patch
+    {
+        //https://github.com/exp111/OutwardStuff/blob/master/FailedRecipesFix/FailedRecipes.cs#L55
+        [HarmonyDebug]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            try
+            {
+                //TODO: transpiler
+                /*
+    public void SaveUnlockedItemsToDisk(UnlockedItems unlockedItems, Action<bool> OnUnlockedItemsSaved)
+	{
+		if (unlockedItems == null)
+		{
+			Debug.Log("CRITICAL ERROR - Unlocked items data is empty, creating new instance");
+			unlockedItems = new UnlockedItems();
+		}
+		this.platformData.SaveJSON<UnlockedItems>("save.data", unlockedItems, OnUnlockedItemsSaved);
+	}
+    =>
+        ...
+        trimmed = unlockedItems.Trim()
+        this.platformData.SaveJSON<UnlockedItems>("save.data", trimmed, OnUnlockedItemsSaved);
+    }
+                */
+                var cur = new CodeMatcher(instructions);
+
+                // find this.platformData...
+                var dataManager_platformData = AccessTools.Field(typeof(DataManager), nameof(DataManager.platformData));
+                cur.MatchForward(true,
+                    new CodeMatch(OpCodes.Ldarg_0), // this.
+                    new CodeMatch(OpCodes.Ldfld, dataManager_platformData), //platformData.
+                    new CodeMatch(OpCodes.Ldstr, "save.data"), //"save.data", 
+                    new CodeMatch(OpCodes.Ldarg_1) // unlockedItems, 
+                );
+
+                // replace the unlockedItems with our own item
+                // insert our code which trims the data
+                cur.RemoveInstruction();
+                cur.Insert(
+                        new CodeInstruction(OpCodes.Ldarg_1), // put "unlockedItems" on the stack
+                        Transpilers.EmitDelegate<Func<UnlockedItems, UnlockedItems>>((items) =>
+                        {
+                            try
+                            {
+                                // Create a trimmed version of the items (where our custom hats dont exist)
+                                var trimmed = new UnlockedItems()
+                                {
+                                    unlockedCharacters = items.unlockedCharacters,
+                                    matchesPlayedSinceLastCharacterUnlock = items.matchesPlayedSinceLastCharacterUnlock,
+                                    totalMatchesPlayed = items.totalMatchesPlayed,
+                                    totalProgress = items.totalProgress,
+                                    hatTypesUnlockedSoFar = new List<int>()
+                                };
+
+                                // to save our custom hats, so we can load/save them seperately
+                                var customHats = new List<CustomCharacterSaveData>();
+                                foreach (CharacterType character in Enum.GetValues(typeof(CharacterType)))
+                                    customHats.Add(new CustomCharacterSaveData(character));
+
+                                // Filter out the custom hats
+                                foreach (var hat in items.hatTypesUnlockedSoFar)
+                                {
+                                    if (Enum.IsDefined(typeof(HatType), hat))
+                                        trimmed.hatTypesUnlockedSoFar.Add(hat);
+                                }
+                                foreach (var origChar in items.unlockedCharacterHats)
+                                {
+                                    var trimmedChar = trimmed.unlockedCharacterHats.Find(c => c.characterType == origChar.characterType);
+                                    if (trimmedChar == null) // not found because char isnt unlocked by default
+                                    {
+                                        trimmedChar = new UnlockedCharacterHats(origChar.characterType);
+                                        trimmed.unlockedCharacterHats.Add(trimmedChar);
+                                    }
+                                    var saveData = customHats.Find(c => c.CharacterType == origChar.characterType);
+                                    foreach (var hat in origChar.unlockedHats)
+                                    {
+                                        //TODO: optimize Enum.IsDefined usage?
+                                        if (Enum.IsDefined(typeof(HatType), hat)) // only hats which exist
+                                            trimmedChar.unlockedHats.Add(hat);
+                                        else
+                                            saveData.Hats.Add(hat); // custom hat
+                                        trimmedChar.lastSelectedHat = origChar.lastSelectedHat;
+                                    }
+                                }
+
+                                // save the custom hats into a new file
+                                var xml = new XmlSerializer(typeof(List<CustomCharacterSaveData>));
+                                var path = Path.Combine(Application.persistentDataPath, HatLoader.CustomHatsSaveFile);
+                                var file = File.Create(path);
+                                //TODO: trim empty characters beforehand?
+                                xml.Serialize(file, customHats);
+                                //TODO: also save hatTypesUnlockedSoFar?
+
+                                // let the game save the trimmed version
+                                foreach (var item in trimmed.unlockedCharacterHats)
+                                {
+                                    //TODO: test if the trimming works?
+                                    HatLoader.Log.LogInfo($"char: {item.characterType}, hats: ({string.Join(", ", item.lastSelectedHat)})");
+                                }
+                                return trimmed;
+                            }
+                            catch (Exception ex)
+                            {
+                                HatLoader.Log.LogError($"Exception during DataManager.SaveUnlockedItemsToDisk transpiler: {ex}");
+                                return items;
+                            }
+                        })
+                    );
+
+                var e = cur.InstructionEnumeration();
+                foreach (var code in e)
+                {
+                    HatLoader.Log.LogMessage(code);
+                }
+                return e;
+            }
+            catch (Exception e)
+            {
+                HatLoader.Log.LogMessage($"Exception during DataManager.SaveUnlockedItemsToDisk hook: {e}");
+                return instructions;
+            }
+        }
+    }
+
+    // Loads our unlocked custom hats and injects them into the save
+    [HarmonyPatch(typeof(DataManager), nameof(DataManager.LoadUnlockedItemsFromDisk))]
+    class DataManager_LoadUnlockedItemsFromDisk_Patch
+    {
+        //[HarmonyDebug]
+        [HarmonyTranspiler]
+        public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            try
+            {
+                //TODO: transpiler
+                /*
+    public void LoadUnlockedItemsFromDisk(Action<UnlockedItems> OnUnlockedItemsLoaded)
+    {
+	    if (this.platformData.FileExists("save.data"))
+	    {
+		    this.platformData.LoadJSON<UnlockedItems>("save.data", OnUnlockedItemsLoaded);
+
+		    return;
+	    }
+        ...
+    }
+    =>
+    if (this.platformData.FileExists("save.data"))
+	{
+		this.platformData.LoadJSON<UnlockedItems>("save.data", (unlocked) => 
+                {
+                    unlocked.Add(LoadCustomHats());
+                    OnUnlockedItemsLoaded(unlocked)
+                });
+
+		return;
+	}
+                 */
+                var cur = new CodeMatcher(instructions);
+
+                //TODO: do stuff
+
+                var e = cur.InstructionEnumeration();
+                /*foreach (var code in e)
+                {
+                    Log.LogMessage(code);
+                }*/
+                return e;
+            }
+            catch (Exception e)
+            {
+                HatLoader.Log.LogMessage($"Exception during DataManager.LoadUnlockedItemsFromDisk hook: {e}");
+                return instructions;
+            }
         }
     }
 }
