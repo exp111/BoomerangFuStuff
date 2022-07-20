@@ -4,6 +4,7 @@ using BepInEx.Logging;
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -58,6 +59,12 @@ namespace HatLoader
             }
         }
 #endif
+
+        [Conditional("DEBUG")]
+        public static void DebugLog(string text, LogLevel logLevel = LogLevel.Info)
+        {
+            Log.Log(logLevel, text);
+        }
     }
 
     [Serializable]
@@ -268,7 +275,6 @@ namespace HatLoader
         {
             try
             {
-                //TODO: transpiler
                 /*
     public void SaveUnlockedItemsToDisk(UnlockedItems unlockedItems, Action<bool> OnUnlockedItemsSaved)
 	{
@@ -297,8 +303,9 @@ namespace HatLoader
                 );
 
                 // replace the unlockedItems with our own item
-                // insert our code which trims the data
+                // remote the unlockedItems load (this is actually redundant as we could keep this ldarg_1 but meh)
                 cur.RemoveInstruction();
+                // insert our code which trims the data
                 cur.Insert(
                         new CodeInstruction(OpCodes.Ldarg_1), // put "unlockedItems" on the stack
                         Transpilers.EmitDelegate<Func<UnlockedItems, UnlockedItems>>((items) =>
@@ -318,7 +325,12 @@ namespace HatLoader
                                 // to save our custom hats, so we can load/save them seperately
                                 var customHats = new List<CustomCharacterSaveData>();
                                 foreach (CharacterType character in Enum.GetValues(typeof(CharacterType)))
+                                {
+                                    if (character == CharacterType.None) // doesnt have any hats
+                                        continue;
+
                                     customHats.Add(new CustomCharacterSaveData(character));
+                                }
 
                                 // Filter out the custom hats
                                 foreach (var hat in items.hatTypesUnlockedSoFar)
@@ -339,9 +351,17 @@ namespace HatLoader
                                     {
                                         //TODO: optimize Enum.IsDefined usage?
                                         if (Enum.IsDefined(typeof(HatType), hat)) // only hats which exist
+                                        {
+                                            if (hat == 0) // we already have that one (None) by default, so we would only create duplicates (FIXME: ?which the game cant handle)
+                                                continue;
+
                                             trimmedChar.unlockedHats.Add(hat);
-                                        else
-                                            saveData.Hats.Add(hat); // custom hat
+                                        }
+                                        else // custom hat
+                                        {
+                                            saveData.Hats.Add(hat);
+                                        }
+
                                         trimmedChar.lastSelectedHat = origChar.lastSelectedHat;
                                     }
                                 }
@@ -367,10 +387,6 @@ namespace HatLoader
                     );
 
                 var e = cur.InstructionEnumeration();
-                /*foreach (var code in e)
-                {
-                    HatLoader.Log.LogMessage(code);
-                }*/
                 return e;
             }
             catch (Exception e)
@@ -391,39 +407,105 @@ namespace HatLoader
         {
             try
             {
-                //TODO: transpiler
                 /*
-    public void LoadUnlockedItemsFromDisk(Action<UnlockedItems> OnUnlockedItemsLoaded)
-    {
-	    if (this.platformData.FileExists("save.data"))
-	    {
-		    this.platformData.LoadJSON<UnlockedItems>("save.data", OnUnlockedItemsLoaded);
+        public void LoadUnlockedItemsFromDisk(Action<UnlockedItems> OnUnlockedItemsLoaded)
+        {
+            if (this.platformData.FileExists("save.data"))
+            {
+                this.platformData.LoadJSON<UnlockedItems>("save.data", OnUnlockedItemsLoaded);
 
-		    return;
-	    }
-        ...
-    }
-    =>
-    if (this.platformData.FileExists("save.data"))
-	{
-		this.platformData.LoadJSON<UnlockedItems>("save.data", (unlocked) => 
-                {
-                    unlocked.Add(LoadCustomHats());
-                    OnUnlockedItemsLoaded(unlocked)
-                });
+                return;
+            }
+            ...
+        }
 
-		return;
-	}
-                 */
+        ldarg.0
+        class PlatformData DataManager::platformData
+        ldstr     "save.data"
+        ldarg.1
+        callvirt instance void PlatformData::LoadJSON<class UnlockedItems>(string, class [netstandard] System.Action`1<!!0>)
+
+        =>
+        if (this.platformData.FileExists("save.data"))
+        {
+            this.platformData.LoadJSON<UnlockedItems>("save.data", (unlocked) => 
+                    {
+                        unlocked.Add(LoadCustomHats());
+                        OnUnlockedItemsLoaded(unlocked)
+                    });
+
+            return;
+        }
+                     */
                 var cur = new CodeMatcher(instructions);
 
-                //TODO: do stuff
+                // find this.platformData...
+                var dataManager_platformData = AccessTools.Field(typeof(DataManager), nameof(DataManager.platformData));
+                cur.MatchForward(true,
+                    new CodeMatch(OpCodes.Ldarg_0), // this.
+                    new CodeMatch(OpCodes.Ldfld, dataManager_platformData), //platformData.
+                    new CodeMatch(OpCodes.Ldstr, "save.data"), //"save.data", 
+                    new CodeMatch(OpCodes.Ldarg_1) // unlockedItems, 
+                );
+
+                // Don't push ldarg_1 
+                cur.RemoveInstruction();
+
+                cur.Insert(
+                        new CodeInstruction(OpCodes.Ldarg_1), // put "unlockedItems" on the stack
+                        Transpilers.EmitDelegate<Func<Action<UnlockedItems>, Action<UnlockedItems>>>((original) =>
+                        {
+                            try
+                            {
+                                Action<UnlockedItems> replace = (items) =>
+                                {
+                                    try
+                                    {
+                                        // add custom hats to the items
+                                        // read from hatLoader.xml
+                                        var xml = new XmlSerializer(typeof(List<CustomCharacterSaveData>));
+                                        var path = Path.Combine(Application.persistentDataPath, HatLoader.CustomHatsSaveFile);
+                                        var file = File.OpenRead(path);
+                                        var customHats = (List<CustomCharacterSaveData>)xml.Deserialize(file);
+                                        file.Close();
+                                        // now add the custom hats into the list
+                                        //TODO: dynamic ID assignment
+                                        foreach (var character in customHats)
+                                        {
+                                            var origChar = items.unlockedCharacterHats.Find(c => c.characterType == character.CharacterType);
+                                            if (origChar == null)
+                                            {
+                                                // no need to do anything probably. either a predefined character that isnt available or we lost a character in the main save (which we probably shouldnt recover)
+                                                HatLoader.DebugLog($"Missing character {character.CharacterType} in unlockedItems while parsing custom hats");
+                                                continue;
+                                            }
+
+                                            foreach (var hat in character.Hats)
+                                            {
+                                                origChar.unlockedHats.Add(hat);
+                                                HatLoader.DebugLog($"Added hat {hat} to character {character.CharacterType}");
+                                            }
+                                        }
+                                        //TODO: hatTypesUnlockedSoFar?
+                                    } 
+                                    catch (Exception ex)
+                                    {
+                                        HatLoader.Log.LogError($"Exception during DataManager.LoadUnlockedItemsFromDisk OnUnlockedItemsLoaded replacement: {ex}");
+                                    }
+                                    // return the list with (hopefully) our added hats
+                                    original(items);
+                                };
+                                return replace;
+                            }
+                            catch (Exception ex)
+                            {
+                                HatLoader.Log.LogError($"Exception during DataManager.LoadUnlockedItemsFromDisk transpiler: {ex}");
+                                return original;
+                            }
+                        })
+                    );
 
                 var e = cur.InstructionEnumeration();
-                /*foreach (var code in e)
-                {
-                    Log.LogMessage(code);
-                }*/
                 return e;
             }
             catch (Exception e)

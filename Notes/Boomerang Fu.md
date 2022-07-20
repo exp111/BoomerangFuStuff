@@ -33,6 +33,15 @@ Selection: `UILobbyPlayer.Update`:  => `GameManager.GetNextUnlockedHatForCharact
 
 => After GameManager init'ed, change the `hatLibrary` to include our hats (by copying merging the old array and the new items into a new one)
 
+### Costume Unlock Info
+* First tries to unlock characters
+* Then unlock random hat (`GameManager.UnlockHat`):
+* Check for human + winning players:
+* The lower your hat count for that char, the higher the chance to be selected into a list
+* 50/50 chance to sort that list by least amount of hats
+* Then add non human players to the end of the list
+* I dont wanna parse this shitcode anymore
+
 ### Creating a costume
 * Create a new scene
 * Place a character from a prefab and hide the other layers (like death models and such)
@@ -56,3 +65,10 @@ You should probably set some compression options if you use ThunderKit cause it 
 * More characters
 * Level selection/blacklisting
 * Speed up option when all players are dead (like in shipped)
+* More teams/team colors (+selection)
+* Make it possible to play non team colored chars so your pineapple doesn't look like a tictac
+* More powerups/events
+* Better hat selection
+### Hats
+* Pyramid
+* Witch hat (https://skfb.ly/6WQVN)
