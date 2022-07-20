@@ -28,7 +28,7 @@ An example file:
 <Metadata>
   <hats>
     <HatMetadata>
-      <id>38</id>
+      <name>square</name>
       <hatPrefabBundle>hats</hatPrefabBundle>
       <hatPrefabName>HatSquare</hatPrefabName>
       <debrisPrefabBundle>hats</debrisPrefabBundle>
@@ -42,7 +42,7 @@ An example file:
       </bannedCharacters>
     </HatMetadata>
     <HatMetadata>
-      <id>39</id>
+      <name>cowboy</name>
       <hatPrefabBundle>hats</hatPrefabBundle>
       <hatPrefabName>HatCowboy</hatPrefabName>
       <isTall>false</isTall>
@@ -56,7 +56,7 @@ An example file:
 ```
 This file contains definitions for two hats (a square hat and a cowboy hat).  
 The fields:  
-`id`: The hat ID. This should be unique (or things will break). Will probably deprecate this soon (hopefully :tm:)  
+`name`: The hat name. This should be unique inside the metadata file (or things will break).
 `hatPrefabBundle`: The relative path to the bundle that contains the hat prefab. (Optional)  
 `hatPrefabName`: The name of the prefab inside the bundle. (Optional)  
 `debrisPrefabBundle`: The relative path to the bundle that contains the debris prefab. (Optional)  

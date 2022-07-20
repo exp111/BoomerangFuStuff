@@ -25,7 +25,11 @@ namespace HatLoader
 #if DEBUG
         private ConfigEntry<KeyboardShortcut> LevelUpKey { get; set; }
 #endif
-        //TODO: bidirectional name<->ID dicts
+        // bidirectional name<->ID dicts
+        public static int nextFreeID = (int)Enum.GetValues(typeof(HatType)).Cast<HatType>().Max() + 1;
+        public static Dictionary<string, int> Name2ID = new Dictionary<string, int>();
+        public static Dictionary<int, string> ID2Name = new Dictionary<int, string>();
+
 
         public static ManualLogSource Log;
 
@@ -45,8 +49,15 @@ namespace HatLoader
             }
             catch (Exception ex)
             {
-                Log.LogMessage($"Exception during HatLoader.Awake: {ex}");
+                Log.LogError($"Exception during HatLoader.Awake: {ex}");
             }
+        }
+
+        public static int GetNextHatID(string name)
+        {
+            Name2ID[name] = nextFreeID;
+            ID2Name[nextFreeID] = name;
+            return nextFreeID++;
         }
 
 #if DEBUG
@@ -76,8 +87,8 @@ namespace HatLoader
     [Serializable]
     public class HatMetadata
     {
-        // The id of the hat (enum HatType)
-        public int id; //TODO: change to name
+        // The (inside of your metadata unique) name of the hat
+        public string name; 
         // The relative path to the asset bundle that contains the prefab
         public string hatPrefabBundle;
         // The name of the prefab inside the asset bundle
@@ -104,16 +115,14 @@ namespace HatLoader
         {
             try
             {
-                //TODO: use the ID to dynamically assign ids instead of having them need to be set manually
-                HatLoader.Log.LogMessage("Currently have these hats in hatLibrary:");
+                HatLoader.DebugLog("Currently have these hats in hatLibrary:");
                 foreach (var h in __instance.hatLibrary)
-                    HatLoader.Log.LogMessage($"Type: {h.hatType} ({(int)h.hatType}), Prefab: {h.hatPrefab}, DebrisPrefab: {h.hatDebrisPrefab}, isTall: {h.isTall}, hideHair: {h.hideHair}, attachment: {h.hatAttachment}, bannedChars: {string.Join("-", h.bannedCharacters)}, dlc: {h.dlcID}");
-                var id = Enum.GetValues(typeof(HatType)).Cast<HatType>().Max() + 1;
-                HatLoader.Log.LogMessage($"Next free ID: {id}");
+                    HatLoader.DebugLog($"Type: {h.hatType} ({(int)h.hatType}), Prefab: {h.hatPrefab}, DebrisPrefab: {h.hatDebrisPrefab}, isTall: {h.isTall}, hideHair: {h.hideHair}, attachment: {h.hatAttachment}, bannedChars: {string.Join("-", h.bannedCharacters)}, dlc: {h.dlcID}");
+                HatLoader.DebugLog($"Next free ID: {HatLoader.nextFreeID}");
 
 
                 // find all bundles by looking through all directories and finding "meta.xml" files under "BepInEx/plugins/<folder>/HatLoader/"
-                HatLoader.Log.LogMessage("Now looking for custom hat files:");
+                HatLoader.DebugLog("Now looking for custom hat files:");
                 var basePath = Paths.PluginPath;
                 // temp list to hold the original + our hats (so we dont have to allocate new arrays every time)
                 var hatLibrary = __instance.hatLibrary.ToList();
@@ -130,9 +139,9 @@ namespace HatLoader
                         continue;
 
                     // now parse that metadata file
-                    HatLoader.Log.LogMessage($"Found metadata: {metaPath}");
+                    HatLoader.DebugLog($"Found metadata: {metaPath}");
                     var hats = ParseMetadata(metaPath, cachedBundles);
-                    HatLoader.Log.LogMessage($"Contains {hats.Count} Hats!");
+                    HatLoader.DebugLog($"Contains {hats.Count} Hats!");
 
                     // add the hats we found into the library
                     foreach (var hat in hats)
@@ -148,7 +157,7 @@ namespace HatLoader
             }
             catch (Exception e)
             {
-                HatLoader.Log.LogMessage($"Exception during GameManager.Start hook: {e}");
+                HatLoader.Log.LogError($"Exception during GameManager.Start hook: {e}");
             }
         }
 
@@ -198,9 +207,13 @@ namespace HatLoader
         private static List<Hat> ParseMetadata(string metaPath, Dictionary<string, AssetBundle> cachedBundles)
         {
             List<Hat> hats = new List<Hat>();
+            // the full directory path of the meta.xml
             var dirPath = Path.GetDirectoryName(metaPath);
+            // get the mod folder name
+            var split = dirPath.Split(Path.DirectorySeparatorChar);
+            var modName = split[split.Length - 2];
 
-            HatLoader.Log.LogInfo("Parsing metadata");
+            HatLoader.DebugLog($"Parsing metadata for {modName}");
             XmlSerializer xml = new XmlSerializer(typeof(Metadata));
             StreamReader sr = new StreamReader(metaPath);
             // Parse the file
@@ -222,17 +235,30 @@ namespace HatLoader
             // Now look at the hats inside
             foreach (var hatMeta in meta.hats)
             {
+                if (string.IsNullOrEmpty(hatMeta.name))
+                {
+                    HatLoader.Log.LogWarning($"Hat with prefab {hatMeta.hatPrefabName}/{hatMeta.debrisPrefabName} is missing a name and therefore can't be loaded!");
+                    continue;
+                }
+
                 // Create a new hat with the properties we can copy directly over
+                var uniqueName = $"{modName}_{hatMeta.name}";
+                if (HatLoader.Name2ID.ContainsKey(uniqueName))
+                {
+                    HatLoader.Log.LogWarning($"Duplicate unique name {uniqueName}! Not loading the duplicate hat.");
+                    continue;
+                }
+
                 var hat = new Hat()
                 {
-                    hatType = (HatType)hatMeta.id,
+                    hatType = (HatType)HatLoader.GetNextHatID(uniqueName), // dynamic ID assignment
                     isTall = hatMeta.isTall,
                     hideHair = hatMeta.hideHair,
                     hatAttachment = hatMeta.hatAttachment,
                     dlcID = DownloadableContentID.None,
                     bannedCharacters = hatMeta.bannedCharacters,
                 };
-                HatLoader.Log.LogInfo($"Parsing hat with id {(int)hat.hatType}");
+                HatLoader.DebugLog($"Parsing hat with id {(int)hat.hatType}");
                 // Parse the prefab from the asset bundle
                 var prefab = GetAssetFromBundle(dirPath, cachedBundles, hatMeta.hatPrefabBundle, hatMeta.hatPrefabName);
                 if (prefab != null)
@@ -242,7 +268,7 @@ namespace HatLoader
                 if (debris != null)
                     hat.hatDebrisPrefab = debris as Debris3D;
 
-                HatLoader.Log.LogMessage($"Loading new Hat: Type: {hat.hatType} ({(int)hat.hatType}), Prefab: {hat.hatPrefab}, DebrisPrefab: {hat.hatDebrisPrefab}, isTall: {hat.isTall}, hideHair: {hat.hideHair}, attachment: {hat.hatAttachment}, bannedChars: {string.Join("-", hat.bannedCharacters)}, dlc: {hat.dlcID}");
+                HatLoader.DebugLog($"Loading new Hat ({uniqueName}): Type: {hat.hatType} ({(int)hat.hatType}), Prefab: {hat.hatPrefab}, DebrisPrefab: {hat.hatDebrisPrefab}, isTall: {hat.isTall}, hideHair: {hat.hideHair}, attachment: {hat.hatAttachment}, bannedChars: {string.Join("-", hat.bannedCharacters)}, dlc: {hat.dlcID}");
                 //TODO: should we really allow hats that have neither prefabs nor debrisprefabs?
                 // Add it to our list
                 hats.Add(hat);
@@ -261,7 +287,7 @@ namespace HatLoader
         }
 
         public CharacterType CharacterType;
-        public List<int> Hats = new List<int>();
+        public List<string> Hats = new List<string>();
     }
 
     // Saves our unlocked custom hats into a file and prevents them from being saved in the main library
@@ -359,7 +385,7 @@ namespace HatLoader
                                         }
                                         else // custom hat
                                         {
-                                            saveData.Hats.Add(hat);
+                                            saveData.Hats.Add(HatLoader.ID2Name[hat]); //transform id into name
                                         }
 
                                         trimmedChar.lastSelectedHat = origChar.lastSelectedHat;
@@ -391,7 +417,7 @@ namespace HatLoader
             }
             catch (Exception e)
             {
-                HatLoader.Log.LogMessage($"Exception during DataManager.SaveUnlockedItemsToDisk hook: {e}");
+                HatLoader.Log.LogError($"Exception during DataManager.SaveUnlockedItemsToDisk hook: {e}");
                 return instructions;
             }
         }
@@ -469,7 +495,6 @@ namespace HatLoader
                                         var customHats = (List<CustomCharacterSaveData>)xml.Deserialize(file);
                                         file.Close();
                                         // now add the custom hats into the list
-                                        //TODO: dynamic ID assignment
                                         foreach (var character in customHats)
                                         {
                                             var origChar = items.unlockedCharacterHats.Find(c => c.characterType == character.CharacterType);
@@ -482,8 +507,8 @@ namespace HatLoader
 
                                             foreach (var hat in character.Hats)
                                             {
-                                                origChar.unlockedHats.Add(hat);
-                                                HatLoader.DebugLog($"Added hat {hat} to character {character.CharacterType}");
+                                                origChar.unlockedHats.Add(HatLoader.Name2ID[hat]); // get dynamic id from name
+                                                HatLoader.DebugLog($"Added hat {hat} ({HatLoader.Name2ID[hat]}) to character {character.CharacterType}");
                                             }
                                         }
                                         //TODO: hatTypesUnlockedSoFar?
@@ -510,7 +535,7 @@ namespace HatLoader
             }
             catch (Exception e)
             {
-                HatLoader.Log.LogMessage($"Exception during DataManager.LoadUnlockedItemsFromDisk hook: {e}");
+                HatLoader.Log.LogError($"Exception during DataManager.LoadUnlockedItemsFromDisk hook: {e}");
                 return instructions;
             }
         }
