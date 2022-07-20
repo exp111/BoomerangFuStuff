@@ -302,15 +302,20 @@ namespace HatLoader
             try
             {
                 /*
-    public void SaveUnlockedItemsToDisk(UnlockedItems unlockedItems, Action<bool> OnUnlockedItemsSaved)
-	{
-		if (unlockedItems == null)
-		{
-			Debug.Log("CRITICAL ERROR - Unlocked items data is empty, creating new instance");
-			unlockedItems = new UnlockedItems();
-		}
-		this.platformData.SaveJSON<UnlockedItems>("save.data", unlockedItems, OnUnlockedItemsSaved);
-	}
+        public void SaveUnlockedItemsToDisk(UnlockedItems unlockedItems, Action<bool> OnUnlockedItemsSaved)
+	    {
+		    if (unlockedItems == null)
+		    {
+			    Debug.Log("CRITICAL ERROR - Unlocked items data is empty, creating new instance");
+			    unlockedItems = new UnlockedItems();
+		    }
+		    this.platformData.SaveJSON<UnlockedItems>("save.data", unlockedItems, OnUnlockedItemsSaved);
+	    }
+        =
+        ldarg.0
+        ldfld     class PlatformData DataManager::platformData
+        ldstr     "save.data"
+        ldarg.1
     =>
         ...
         trimmed = unlockedItems.Trim()
@@ -392,14 +397,16 @@ namespace HatLoader
                                     }
                                 }
 
+                                // trim empty characters beforehand
+                                var count = customHats.RemoveAll(c => c.Hats.Count == 0);
+                                HatLoader.DebugLog($"Removed {count} empty characters from custom save data");
+
                                 // save the custom hats into a new file
                                 var xml = new XmlSerializer(typeof(List<CustomCharacterSaveData>));
                                 var path = Path.Combine(Application.persistentDataPath, HatLoader.CustomHatsSaveFile);
-                                var file = File.Create(path);
-                                //TODO: trim empty characters beforehand?
-                                xml.Serialize(file, customHats);
+                                using (var file = File.Create(path))
+                                    xml.Serialize(file, customHats);
                                 //TODO: also save hatTypesUnlockedSoFar?
-                                file.Close();
 
                                 // let the game save the trimmed version
                                 return trimmed;
@@ -487,13 +494,20 @@ namespace HatLoader
                                 {
                                     try
                                     {
+                                        var path = Path.Combine(Application.persistentDataPath, HatLoader.CustomHatsSaveFile);
+                                        if (!File.Exists(path)) // save data doesnt exist
+                                        {
+                                            original(items);
+                                            return;
+                                        }
+
                                         // add custom hats to the items
                                         // read from hatLoader.xml
                                         var xml = new XmlSerializer(typeof(List<CustomCharacterSaveData>));
-                                        var path = Path.Combine(Application.persistentDataPath, HatLoader.CustomHatsSaveFile);
-                                        var file = File.OpenRead(path);
-                                        var customHats = (List<CustomCharacterSaveData>)xml.Deserialize(file);
-                                        file.Close();
+                                        List<CustomCharacterSaveData> customHats;
+                                        using (var file = File.OpenRead(path))
+                                            customHats = (List<CustomCharacterSaveData>)xml.Deserialize(file);
+                                        
                                         // now add the custom hats into the list
                                         foreach (var character in customHats)
                                         {
