@@ -1,4 +1,5 @@
 ﻿using BepInEx;
+using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
 using System;
@@ -20,6 +21,10 @@ namespace HatLoader
         public const string VERSION = "1.0.0";
 
         public const string CustomHatsSaveFile = "hatLoader.xml";
+#if DEBUG
+        private ConfigEntry<KeyboardShortcut> LevelUpKey { get; set; }
+#endif
+        //TODO: bidirectional name<->ID dicts
 
         public static ManualLogSource Log;
 
@@ -30,6 +35,10 @@ namespace HatLoader
                 Log = Logger;
                 Log.LogMessage("Awake");
 
+#if DEBUG
+                LevelUpKey = Config.Bind("Hotkeys", "LevelUp", new KeyboardShortcut(KeyCode.U, KeyCode.LeftControl));
+#endif
+
                 var harmony = new Harmony(ID);
                 harmony.PatchAll(Assembly.GetExecutingAssembly());
             }
@@ -38,6 +47,17 @@ namespace HatLoader
                 Log.LogMessage($"Exception during HatLoader.Awake: {ex}");
             }
         }
+
+#if DEBUG
+        private void Update()
+        {
+            // Get a random hat
+            if (LevelUpKey.Value.IsDown())
+            {
+                Singleton<GameManager>.Instance.UnlockHat();
+            }
+        }
+#endif
     }
 
     [Serializable]
@@ -242,7 +262,7 @@ namespace HatLoader
     class DataManager_SaveUnlockedItemsToDisk_Patch
     {
         //https://github.com/exp111/OutwardStuff/blob/master/FailedRecipesFix/FailedRecipes.cs#L55
-        [HarmonyDebug]
+        //[HarmonyDebug]
         [HarmonyTranspiler]
         public static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
         {
@@ -333,13 +353,9 @@ namespace HatLoader
                                 //TODO: trim empty characters beforehand?
                                 xml.Serialize(file, customHats);
                                 //TODO: also save hatTypesUnlockedSoFar?
+                                file.Close();
 
                                 // let the game save the trimmed version
-                                foreach (var item in trimmed.unlockedCharacterHats)
-                                {
-                                    //TODO: test if the trimming works?
-                                    HatLoader.Log.LogInfo($"char: {item.characterType}, hats: ({string.Join(", ", item.lastSelectedHat)})");
-                                }
                                 return trimmed;
                             }
                             catch (Exception ex)
@@ -351,10 +367,10 @@ namespace HatLoader
                     );
 
                 var e = cur.InstructionEnumeration();
-                foreach (var code in e)
+                /*foreach (var code in e)
                 {
                     HatLoader.Log.LogMessage(code);
-                }
+                }*/
                 return e;
             }
             catch (Exception e)
