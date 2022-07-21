@@ -3,7 +3,18 @@ Unity 2019.2.21 (at least that is what asset ripper says to the resource files)
 
 ## Logos
 `Startup.ShowLogos()`
-TODO: skip logos
+=> okay this code works, but it makes no difference (logo 0 isn't shown)
+```c#
+[HarmonyPatch(typeof(Startup), nameof(Startup.ShowLogos))]
+class Startup_ShowLogos_Patch
+{
+    [HarmonyPrefix]
+    public static void Prefix(Startup __instance)
+    {
+        __instance.logos = new UnityEngine.RectTransform[1] { null };
+    }
+}
+```
 
 ## Levels
 Saved in scenes + meta info in assets (`LevelAsset`)
@@ -59,7 +70,6 @@ You should probably set some compression options if you use ThunderKit cause it 
 
 
 ## Ideas
-* Intro skip
 * More levels
 * More costumes
 * More characters

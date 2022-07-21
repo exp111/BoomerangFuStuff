@@ -521,7 +521,14 @@ namespace HatLoader
 
                                             foreach (var hat in character.Hats)
                                             {
-                                                origChar.unlockedHats.Add(HatLoader.Name2ID[hat]); // get dynamic id from name
+                                                // try to get the dynamic id from the unique name
+                                                if (!HatLoader.Name2ID.TryGetValue(hat, out var id))
+                                                {
+                                                    HatLoader.Log.LogWarning($"Tried to add non existing hat {hat} from save");
+                                                    continue;
+                                                }
+
+                                                origChar.unlockedHats.Add(id); 
                                                 HatLoader.DebugLog($"Added hat {hat} ({HatLoader.Name2ID[hat]}) to character {character.CharacterType}");
                                             }
                                         }
