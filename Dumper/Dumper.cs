@@ -31,7 +31,7 @@ namespace Dumper
             }
             catch (Exception ex)
             {
-                Log.LogError($"Exception during HatLoader.Awake: {ex}");
+                Log.LogError($"Exception during Dumper.Awake: {ex}");
             }
         }
     }
@@ -49,6 +49,8 @@ namespace Dumper
                 Dumper.Log.LogMessage("Currently have these hats in hatLibrary:");
                 foreach (var h in __instance.hatLibrary)
                     Dumper.Log.LogMessage($"Type: {h.hatType} ({(int)h.hatType}), Prefab: {h.hatPrefab}, DebrisPrefab: {h.hatDebrisPrefab}, isTall: {h.isTall}, hideHair: {h.hideHair}, attachment: {h.hatAttachment}, bannedChars: {string.Join("-", h.bannedCharacters)}, dlc: {h.dlcID}");
+            
+                //TODO: write to file in csv format or smth
             }
             catch (Exception e)
             {

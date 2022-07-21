@@ -68,6 +68,23 @@ Either use ThunderKit (https://github.com/PassivePicasso/ThunderKit), ~~which di
 
 You should probably set some compression options if you use ThunderKit cause it makes a difference.
 
+## Powerups
+`Player.OnPickupColliderStay()` => checks for "Powerup" tag =>
+`Player.CollectPowerup()` => gets powerup =>
+* `Powerup.GetCollected` => if `power` not set (PowerupType.None):
+* `LevelManager.SelectRandomPower`: reads from `LevelManager.possiblePowerups` (Created in `LevelManager.BuildPossiblePowerups`), filters duplicates/non compatibles
+`Player.StartPowerup`: does the direct powerup effects (events, shield, reverse timer), checks for incompatibilities, adds powerup to `Player.activePower` (bit &) + Player.powerupHistory, also checks `Player.maxActivePowerups`
+TODO: Prefix/Postfix this
+
+`LevelManager.BuildPossiblePowerups`: adds from `LevelManager.powerupProbabilities` if powerup is allowed (in `SettingsManager.MatchSettings.availablePowerups` (bitwise &)), also filters if gamemode is goldendisk
+TODO: hook `Powerup.AllPowerups()` to also include our custom powerups and also find out how to add our shit to UI
+TODO: Postfix `LevelManager.LevelManager()` or `LevelManager.Start` and include our powerups in `powerupProbabilities`
+
+### Custom Powerups Idea
+* Create custom Powerup class (given by our Loader): name, icon, override events, CollidesWith (should we do this or rather let them do it in OnCollect?), countsToHistory (should overwrite other powerups?) in your `Plugin.Awake` (and add it to list by calling smth)
+* events: OnAttack(?), OnThrow(?), OnEndThrow(? like explosive/multi), OnPlayerSpawn (?), OnCollect
+* you do additional events yourself
+* We call Events in perspective funcs
 
 ## Ideas
 * More levels
@@ -78,7 +95,8 @@ You should probably set some compression options if you use ThunderKit cause it 
 * More teams/team colors (+selection)
 * Make it possible to play non team colored chars so your pineapple doesn't look like a tictac
 * More powerups/events
+* Powerup chance adjustment? (currently all are equal)
 * Better hat selection
+* Spawn point randomizer?
 ### Hats
 * Pyramid
-* Witch hat (https://skfb.ly/6WQVN)
