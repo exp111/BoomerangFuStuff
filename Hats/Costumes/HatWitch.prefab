@@ -1,0 +1,168 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1316162791949846684
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1316162791949846687}
+  m_Layer: 0
+  m_Name: HatWitch
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1316162791949846687
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1316162791949846684}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: -0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children:
+  - {fileID: 4462891131352525528}
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1001 &1316162792288181746
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    m_TransformParent: {fileID: 1316162791949846687}
+    m_Modifications:
+    - target: {fileID: 271526580438624838, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 595174393915839607, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1674194406404449908, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 1938999422221185421, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2531522927858490004, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3369938858928407625, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.32
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0.8191521
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: -0.5735764
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_RootOrder
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 250
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.018
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.018
+      objectReference: {fileID: 0}
+    - target: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_LocalScale.z
+      value: 0.018
+      objectReference: {fileID: 0}
+    - target: {fileID: 5107446481638786450, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_Name
+      value: The_Witch's_Hat
+      objectReference: {fileID: 0}
+    - target: {fileID: 6589182171167317014, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6631229209897413789, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7942155277478332240, guid: c08fe311b820fbd45a20413d68d4b480,
+        type: 3}
+      propertyPath: m_CastShadows
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: c08fe311b820fbd45a20413d68d4b480, type: 3}
+--- !u!4 &4462891131352525528 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 3435310559622231850, guid: c08fe311b820fbd45a20413d68d4b480,
+    type: 3}
+  m_PrefabInstance: {fileID: 1316162792288181746}
+  m_PrefabAsset: {fileID: 0}

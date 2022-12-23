@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-16"?>
+<Metadata>
+  <hats>
+    <HatMetadata>
+      <name>square</name>
+      <hatPrefabBundle>hats</hatPrefabBundle>
+      <hatPrefabName>HatSquare</hatPrefabName>
+      <isTall>true</isTall>
+      <hideHair>false</hideHair>
+      <hatAttachment>HatJoint</hatAttachment>
+      <bannedCharacters>
+      </bannedCharacters>
+    </HatMetadata>
+    <HatMetadata>
+      <name>cowboy</name>
+      <hatPrefabBundle>hats</hatPrefabBundle>
+      <hatPrefabName>HatCowboy</hatPrefabName>
+      <isTall>false</isTall>
+      <hideHair>true</hideHair>
+      <hatAttachment>HatJoint</hatAttachment>
+      <bannedCharacters>
+      </bannedCharacters>
+    </HatMetadata>
+    <HatMetadata>
+      <name>witch</name>
+      <hatPrefabBundle>hats</hatPrefabBundle>
+      <hatPrefabName>HatWitch</hatPrefabName>
+      <isTall>true</isTall>
+      <hideHair>true</hideHair>
+      <hatAttachment>HatJoint</hatAttachment>
+      <bannedCharacters>
+      </bannedCharacters>
+    </HatMetadata>
+  </hats>
+</Metadata>
